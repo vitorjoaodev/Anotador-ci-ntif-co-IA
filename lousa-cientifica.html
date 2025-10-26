@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lousa Pro - Minimalista</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        /* Layout Principal */
+        .app {
+            display: grid;
+            grid-template-columns: 60px 1fr 400px;
+            height: 100vh;
+        }
+
+        /* Barra de Ferramentas Lateral */
+        .tools-bar {
+            background: #1a1a1a;
+            border-right: 1px solid #2a2a2a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            gap: 10px;
+        }
+
+        .tool-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 20px;
+            background: transparent;
+            border: none;
+            color: #888;
+        }
+
+        .tool-icon:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .tool-icon.active {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .divider {
+            width: 30px;
+            height: 1px;
+            background: #2a2a2a;
+            margin: 10px 0;
+        }
+
+        .color-mini {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-mini.active {
+            border-color: #fff;
+            transform: scale(1.2);
+        }
+
+        /* Área de Trabalho */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            background: #0f0f0f;
+        }
+
+        .top-bar {
+            height: 50px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .top-bar h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: #2a2a2a;
+            border: none;
+            border-radius: 6px;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: #333;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        .canvas-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #mainCanvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        /* Painel Direito - Notas e IA */
+        .right-panel {
+            background: #1a1a1a;
+            border-left: 1px solid #2a2a2a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tabs {
+            display: flex;
+            background: #141414;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            color: #888;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #4CAF50;
+            border-bottom-color: #4CAF50;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Área de Texto */
+        .text-area {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .note-input {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            color: #e0e0e0;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        .note-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .saved-notes {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .note-card {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .note-card:hover {
+            border-color: #4CAF50;
+            background: #141414;
+        }
+
+        .note-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .note-card-date {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Área IA */
+        .ai-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .ai-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ai-msg {
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            max-width: 90%;
+        }
+
+        .ai-msg.user {
+            background: #4CAF50;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-msg.bot {
+            background: #2a2a2a;
+            color: #e0e0e0;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .ai-input-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ai-input {
+            flex: 1;
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            color: #e0e0e0;
+            font-size: 13px;
+            font-family: inherit;
+            resize: none;
+        }
+
+        .ai-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        /* Controle de tamanho */
+        .size-control {
+            text-align: center;
+            padding: 10px;
+            color: #888;
+            font-size: 11px;
+        }
+
+        .size-slider {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f0f0f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a2a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Barra de Ferramentas -->
+        <div class="tools-bar">
+            <button class="tool-icon active" onclick="setTool('draw')" title="Desenhar">✏️</button>
+            <button class="tool-icon" onclick="setTool('erase')" title="Borracha">🧹</button>
+            <button class="tool-icon" onclick="clearCanvas()" title="Limpar">🗑️</button>
+            
+            <div class="divider"></div>
+            
+            <div class="color-mini active" style="background: #fff" onclick="setColor('#ffffff')"></div>
+            <div class="color-mini" style="background: #ff4444" onclick="setColor('#ff4444')"></div>
+            <div class="color-mini" style="background: #4CAF50" onclick="setColor('#4CAF50')"></div>
+            <div class="color-mini" style="background: #2196F3" onclick="setColor('#2196F3')"></div>
+            <div class="color-mini" style="background: #FFD700" onclick="setColor('#FFD700')"></div>
+            <div class="color-mini" style="background: #FF69B4" onclick="setColor('#FF69B4')"></div>
+            
+            <div class="divider"></div>
+            
+            <div class="size-control">
+                <div id="sizeDisplay">3px</div>
+                <input type="range" class="size-slider" min="1" max="20" value="3" oninput="setSize(this.value)">
+            </div>
+        </div>
+
+        <!-- Área de Trabalho -->
+        <div class="workspace">
+            <div class="top-bar">
+                <h1>🎨 Lousa Digital</h1>
+                <div class="top-actions">
+                    <button class="btn" onclick="undo()">↩️ Desfazer</button>
+                    <button class="btn btn-primary" onclick="saveWork()">💾 Salvar</button>
+                    <button class="btn" onclick="exportCanvas()">📥 Exportar</button>
+                </div>
+            </div>
+            <div class="canvas-area" id="canvasContainer">
+                <canvas id="mainCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Painel Direito -->
+        <div class="right-panel">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('notes')">📝 Anotações</div>
+                <div class="tab" onclick="switchTab('ai')">🤖 IA</div>
+            </div>
+
+            <!-- Tab Anotações -->
+            <div class="tab-content active" id="notesTab">
+                <div class="text-area">
+                    <textarea class="note-input" id="noteText" placeholder="Digite suas anotações aqui...
+
+📌 Dicas:
+• Use esta área para anotações de texto
+• Salve com Ctrl+S
+• Combine com desenhos na lousa"></textarea>
+                    
+                    <button class="btn btn-primary" onclick="saveNote()">💾 Salvar Anotação</button>
+                    
+                    <div style="border-top: 1px solid #2a2a2a; padding-top: 15px;">
+                        <h3 style="font-size: 12px; color: #888; margin-bottom: 10px;">SALVAS</h3>
+                        <div class="saved-notes" id="savedNotes">
+                            <div style="color: #666; font-size: 12px; text-align: center; padding: 20px;">
+                                Nenhuma anotação salva
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab IA -->
+            <div class="tab-content" id="aiTab">
+                <div class="ai-area">
+                    <div class="ai-messages" id="aiMessages">
+                        <div class="ai-msg bot">
+                            👋 Olá! Sou seu assistente IA.
+                            <br><br>
+                            Posso ajudar com:
+                            <br>• Programação
+                            <br>• Matemática
+                            <br>• Ciências
+                            <br>• Revisão de código
+                        </div>
+                    </div>
+                    <div class="ai-input-box">
+                        <textarea class="ai-input" id="aiInput" placeholder="Pergunte algo..." rows="3"></textarea>
+                        <button class="btn btn-primary" onclick="sendAI()" id="aiBtn">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== CONFIGURAÇÃO DO CANVAS ==========
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+
+        let isDrawing = false;
+        let currentTool = 'draw';
+        let currentColor = '#ffffff';
+        let currentSize = 3;
+        let lastX = 0;
+        let lastY = 0;
+        let history = [];
+        let historyStep = -1;
+
+        // Ajustar tamanho do canvas
+        function resizeCanvas() {
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            // Restaurar desenho após resize
+            if (historyStep >= 0 && history[historyStep]) {
+                const img = new Image();
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = history[historyStep];
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // ========== DESENHO ==========
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDraw);
+        canvas.addEventListener('mouseout', stopDraw);
+
+        // Touch support
+        canvas.addEventListener('touchstart', handleTouch);
+        canvas.addEventListener('touchmove', handleTouch);
+        canvas.addEventListener('touchend', stopDraw);
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function startDraw(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            ctx.lineWidth = currentSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            if (currentTool === 'draw') {
+                ctx.strokeStyle = currentColor;
+                ctx.globalCompositeOperation = 'source-over';
+            } else if (currentTool === 'erase') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = currentSize * 3;
+            }
+            
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            
+            lastX = x;
+            lastY = y;
+        }
+
+        function stopDraw() {
+            if (isDrawing) {
+                isDrawing = false;
+                saveHistory();
+            }
+        }
+
+        function saveHistory() {
+            historyStep++;
+            if (historyStep < history.length) {
+                history.length = historyStep;
+            }
+            history.push(canvas.toDataURL());
+        }
+
+        function undo() {
+            if (historyStep > 0) {
+                historyStep--;
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = history[historyStep];
+            }
+        }
+
+        function clearCanvas() {
+            if (confirm('Limpar toda a lousa?')) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                saveHistory();
+            }
+        }
+
+        function exportCanvas() {
+            const link = document.createElement('a');
+            link.download = `lousa-${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // ========== FERRAMENTAS ==========
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-icon').forEach(icon => {
+                icon.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function setColor(color) {
+            currentColor = color;
+            currentTool = 'draw';
+            document.querySelectorAll('.color-mini').forEach(c => {
+                c.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Ativar ferramenta de desenho
+            document.querySelectorAll('.tool-icon').forEach((icon, i) => {
+                icon.classList.remove('active');
+                if (i === 0) icon.classList.add('active');
+            });
+        }
+
+        function setSize(size) {
+            currentSize = parseInt(size);
+            document.getElementById('sizeDisplay').textContent = size + 'px';
+        }
+
+        // ========== TABS ==========
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        // ========== NOTAS ==========
+        let notes = JSON.parse(localStorage.getItem('digitalNotes')) || [];
+
+        function saveNote() {
+            const text = document.getElementById('noteText').value.trim();
+            if (!text) {
+                alert('Digite algo para salvar!');
+                return;
+            }
+            
+            const title = prompt('Nome da anotação:');
+            if (!title) return;
+            
+            const note = {
+                id: Date.now(),
+                title: title,
+                text: text,
+                canvas: canvas.toDataURL(),
+                date: new Date().toLocaleString('pt-BR')
+            };
+            
+            notes.push(note);
+            localStorage.setItem('digitalNotes', JSON.stringify(notes));
+            updateNotesList();
+            alert('✅ Anotação salva!');
+        }
+
+        function saveWork() {
+            saveNote();
+        }
+
+        function loadNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                document.getElementById('noteText').value = note.text;
+                
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    saveHistory();
+                };
+                img.src = note.canvas;
+                
+                switchTab('notes');
+            }
+        }
+
+        function deleteNote(id, e) {
+            e.stopPropagation();
+            if (confirm('Excluir esta anotação?')) {
+                notes = notes.filter(n => n.id !== id);
+                localStorage.setItem('digitalNotes', JSON.stringify(notes));
+                updateNotesList();
+            }
+        }
+
+        function updateNotesList() {
+            const container = document.getElementById('savedNotes');
+            if (notes.length === 0) {
+                container.innerHTML = '<div style="color: #666; font-size: 12px; text-align: center; padding: 20px;">Nenhuma anotação salva</div>';
+            } else {
+                container.innerHTML = notes.map(note => `
+                    <div class="note-card" onclick="loadNote(${note.id})">
+                        <div class="note-card-title">${note.title}</div>
+                        <div class="note-card-date">${note.date}</div>
+                        <button onclick="deleteNote(${note.id}, event)" style="margin-top: 8px; padding: 4px 8px; background: #ff4444; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 11px;">🗑️ Excluir</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // ========== IA ==========
+        async function sendAI() {
+            const input = document.getElementById('aiInput');
+            const messages = document.getElementById('aiMessages');
+            const btn = document.getElementById('aiBtn');
+            const question = input.value.trim();
+            
+            if (!question) return;
+            
+            // Mensagem do usuário
+            const userMsg = document.createElement('div');
+            userMsg.className = 'ai-msg user';
+            userMsg.textContent = question;
+            messages.appendChild(userMsg);
+            
+            input.value = '';
+            btn.disabled = true;
+            btn.textContent = '...';
+            messages.scrollTop = messages.scrollHeight;
+            
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 2000,
+                        messages: [{
+                            role: 'user',
+                            content: `Responda de forma clara e objetiva. Se for código, use blocos de código. Pergunta: ${question}`
+                        }]
+                    })
+                });
+                
+                const data = await response.json();
+                const answer = data.content[0].text;
+                
+                const botMsg = document.createElement('div');
+                botMsg.className = 'ai-msg bot';
+                botMsg.innerHTML = answer.replace(/\n/g, '<br>');
+                messages.appendChild(botMsg);
+                
+            } catch (error) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'ai-msg bot';
+                errorMsg.textContent = '❌ Erro ao conectar. Tente novamente.';
+                messages.appendChild(errorMsg);
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Enviar';
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Enter para enviar
+        document.getElementById('aiInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAI();
+            }
+        });
+
+        // Ctrl+S para salvar
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveWork();
+            }
+        });
+
+        // Inicializar
+        updateNotesList();
+        saveHistory();
+    </script>
+</body>
+</html>
